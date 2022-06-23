@@ -40,8 +40,16 @@ public class FileClient {
 
             System.out.println("Connecting...");
 
+            //Envia o nome do cliente para listagem dos nomes dos arquivos
+            ObjectOutputStream oos = new ObjectOutputStream(sock.getOutputStream()); //Camada de Enlace
+            oos.writeUTF(CLIENT_NAME);
+            oos.flush();
+
+            //Chama o método que faz a listagem
+            listaArquivos(sock);
+
             int controle = 0;
-            System.out.println("1-Upload de um arquivo.\n2-Download de um arquivo.\n3-Remoção de um arquivo.\n4-Alterar nível de tolerância a falhas.");
+            System.out.println("\n1-Upload de um arquivo.\n2-Download de um arquivo.\n3-Remoção de um arquivo.\n4-Alterar nível de tolerância a falhas.");
             controle = Integer.parseInt(scanner.next());
 
             switch(controle) {
@@ -52,7 +60,6 @@ public class FileClient {
                     fazDownload(sock, controle);
                     break;
             }
-
         }
         finally {
             if (sock != null) sock.close();
@@ -65,28 +72,24 @@ public class FileClient {
     // int (acao) / int (numero de copias) / int (qtd de caracteres do cliente)
     // / string (nome do cliente) / int (qtd de caracteres do arquivo) / string(nome) / tamanho / bytearray
     private static void fazUpload(Socket sock, int acao) throws IOException {
-        //Pega o nome do arquivo e o tamanho, transformando em bytearray
-        System.out.println("Digite o nome do arquivo:");
+        System.out.println("Digite o nome do arquivo que você quer baixar:");
         String nomeArquivo = scanner.next();
 
-
-        //Pega o numero de copias, transformando em bytearray
         System.out.println("Digite a quantidade de copias:");
         int nCopias = Integer.parseInt(scanner.next());
 
-        //Pega o path
         System.out.println("Digite o path:");
         String pathArquivo = scanner.next();
         //scanner.close();
 
-        //Pega o file e o seu tamanho, transformando em bytearray
         File myFile = new File (pathArquivo);
         byte [] conteudoArquivoByteArray = ByteUtils.fileToByteArray(myFile);
 
+        //Guarda os valores no socket
         ObjectOutputStream os = new ObjectOutputStream(sock.getOutputStream());
         os.writeInt(acao);
         os.writeInt(nCopias);
-        os.writeUTF(CLIENT_NAME);
+        //os.writeUTF(CLIENT_NAME);
         os.writeUTF(nomeArquivo);
         os.writeObject(conteudoArquivoByteArray);
 
@@ -97,16 +100,11 @@ public class FileClient {
     }
 
     private static void listaArquivos(Socket sock) throws IOException {
-        /*
-        ObjectOutputStream os = new ObjectOutputStream(sock.getOutputStream()); //Camada de Enlace
-        os.writeUTF(CLIENT_NAME);
-        os.flush();
-        */
-
+        //Recebe os dados do socket
         ObjectInputStream ois = new ObjectInputStream(sock.getInputStream());
         String nomesArquivos = ois.readUTF();
         String[] listaNomesArquivos = nomesArquivos.split(",");
-        System.out.println("Arquivos encontrados: ");
+        System.out.println("\nArquivos encontrados: ");
         for (String nome: listaNomesArquivos) {
             System.out.println("\t" + nome);
         }

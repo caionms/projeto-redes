@@ -29,13 +29,20 @@ public class FileServer {
                     sock = NetworkLayer.aceitaConexao(servsock);
                     System.out.println("Accepted connection : " + sock);
 
-                    ois = new ObjectInputStream(sock.getInputStream()); //Camada de Enlace
+                    //Recebe do o nome do cliente para listagem dos arquivos
+                    ois = new ObjectInputStream(sock.getInputStream());
+                    String nomeCliente = ois.readUTF();
+
+                    //Chama o método que envia a lista
+                    listarArquivos(sock, nomeCliente);
+
+                    ois = new ObjectInputStream(sock.getInputStream());
 
                     int acao = ois.readInt();
 
                     switch(acao) {
                         case 1:
-                            fazUpload(ois);
+                            fazUpload(ois, nomeCliente);
                             break;
                         case 2:
                             fazDownload(sock, ois);
@@ -53,10 +60,9 @@ public class FileServer {
         }
     }
 
-    public static void fazUpload(ObjectInputStream ois) throws IOException {
-        //Pega a acao
+    public static void fazUpload(ObjectInputStream ois, String nomeCliente) throws IOException {
+        //Pega os dados do sock
         int nCopias = ois.readInt();
-        String nomeCliente = ois.readUTF();
         String nomeArquivo = ois.readUTF();
         Object bis = null;
         try {
@@ -72,8 +78,10 @@ public class FileServer {
         System.out.println(nomeCliente);
         System.out.println(nomeArquivo);
 
+        //Faz uma cópia dos dados do bytearray
         byte [] file = (byte[]) bis;
 
+        //Percorre as máquinas criando as pastas e fazendo upload dos arquivos
         for(int i = 1 ; i <= nCopias ; i++ ) {
             new File("./server/" + i).mkdirs();
             new File("./server/" + i + "/" + nomeCliente).mkdirs();
@@ -89,44 +97,42 @@ public class FileServer {
         System.out.println("O upload foi feito com sucesso!");
     }
 
-    //TODO: Alterar para percorrer todas as pastas e devolver para o cliente a string com os files.
+    //TODO: Alterar para percorrer todas as pastas.
     public static void listarArquivos(Socket sock, String nomeCliente) throws IOException {
-        // Building array of files.
+        // Vai na pasta e cria uma lista de files
         File folder = new File("./server/1/" + nomeCliente);
         File[] listOfFiles = folder.listFiles();
 
-        //String nomesArquivos = "";
+        //Percorre os arquivos da pasta do cliente e guarda os nomes
+        String nomesArquivos = "";
         System.out.println("Arquivos encontrados: ");
         // Iterating array of files for printing name of all files present in the directory.
         for (int i = 0; i < listOfFiles.length; i++) {
             System.out.println("\t" + listOfFiles[i].getName());
-            //nomesArquivos += "\n\t" + listOfFiles[i].getName();
+            nomesArquivos += listOfFiles[i].getName() + ",";
         }
 
-        /*
+        //Guarda no socket os nomes dos arquivos do cliente
         ObjectOutputStream os = new ObjectOutputStream(sock.getOutputStream()); //Camada de Enlace
         os.writeUTF(nomesArquivos);
         os.flush();
-         */
     }
 
     //TODO: Alterar para percorrer todas as pastas.
     public static void fazDownload(Socket sock, ObjectInputStream ois) throws IOException {
+        //Faz leitura dos dados para encontrar o arquivo
         String nomeCliente = ois.readUTF();
         String nomeArquivo = ois.readUTF();
         String path = "./server/1/" + nomeCliente + "/" + nomeArquivo;
         File fileEncontrado = new File(path);
         byte [] conteudoArquivoByteArray = ByteUtils.fileToByteArray(fileEncontrado);
 
+        //Guarda o conteúdo no sock para o cliente
         ObjectOutputStream os = new ObjectOutputStream(sock.getOutputStream());
         os.writeObject(conteudoArquivoByteArray);
 
         System.out.println("Downloading " + path + "(" + fileEncontrado.length() + " bytes)");
 
         os.flush();
-
-        //Todo pegar do input o nome do cliente e nome do arquivo, procura nas máquinas e devolve o contéudo
-        //No contéudo deve ter o tamanho do nome do arquivo, o nome do arquivo, o tamanho do arquivo e o arquivo
-        //Pegar do método original
     }
 }
