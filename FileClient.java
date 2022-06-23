@@ -11,16 +11,15 @@ public class FileClient {
     public static int SOCKET_PORT;  // Porta
     public static String SERVER = "172.20.48.1";  // localhost
     public static String CLIENT_NAME;
-
     /*
      * file size temporary hard coded
      * should bigger than the file to be downloaded
      */
     public final static int FILE_SIZE = 6022386;
 
-    public static void main (String [] args ) throws IOException {
-        Scanner scanner = new Scanner(System.in);
+    private static Scanner scanner = new Scanner(System.in);
 
+    public static void main (String [] args ) throws IOException {
         System.out.println("Digite o localhost:");
         SERVER = scanner.next();
 
@@ -37,84 +36,35 @@ public class FileClient {
         Socket sock = null;
 
         try {
-            sock = new Socket(SERVER, SOCKET_PORT);
+            sock = new Socket(SERVER, SOCKET_PORT); //Transporte - Tentando fazer conexão com a rede
+
             System.out.println("Connecting...");
 
             int controle = 0;
-            System.out.println("1-Download de um arquivo. \n 2-Upload de um arquivo. \n 3- Sair.");
+            System.out.println("1-Upload de um arquivo.\n2-Download de um arquivo.\n3-Remoção de um arquivo.\n4-Alterar nível de tolerância a falhas.");
             controle = Integer.parseInt(scanner.next());
 
             switch(controle) {
                 case 1:
-                    fazDownload();
+                    fazUpload(sock, controle);
                     break;
                 case 2:
-                    fazUpload(sock, controle);
+                    fazDownload(sock, controle);
                     break;
             }
 
         }
         finally {
             if (sock != null) sock.close();
+            if (scanner != null) scanner.close();
         }
 
 
     }
 
-
-    // server -> maquinas (n copias) -> cliente -> arquivos
-    private static void fazDownload() throws IOException {
-        //Passar o tamanho do nome do arquivo, o nome do arquivo, o tamanho do nome do cliente e o nome do cliente
-        //Recebe o tamanho do arquivo e o arquivo (o nome ja tem)
-        /* Execucao */
-        int bytesRead;
-        int current = 0;
-        FileOutputStream fos = null;
-        BufferedOutputStream bos = null;
-        Socket sock = null;
-        try {
-            sock = new Socket(SERVER, SOCKET_PORT);
-            System.out.println("Conectando...");
-
-            System.out.println("Ações\n1-Download de arquivo.\n2-Upload de arquivo.\nDigite a acao desejada:");
-            Scanner scanner = new Scanner(System.in);
-            int controle = Integer.parseInt(scanner.next());
-
-            switch (controle) {
-                case 1:
-                    fazDownload();
-                    break;
-                case 2:
-                    fazUpload(sock, controle);
-                    break;
-            }
-
-            /*
-            fos = new FileOutputStream(FILE_TO_RECEIVED);
-            bos = new BufferedOutputStream(fos);
-
-            do {
-                bytesRead =
-                        is.read(mybytearray, current, (mybytearray.length-current));
-                if(bytesRead >= 0) current += bytesRead;
-            } while(bytesRead > -1);
-
-            bos.write(mybytearray, 0 , current);
-            bos.flush();
-            System.out.println("File " + FILE_TO_RECEIVED
-                    + " downloaded (" + current + " bytes read)");*/
-        }
-        finally {
-            if (fos != null) fos.close();
-            if (bos != null) bos.close();
-            if (sock != null) sock.close();
-        }
-    }
     // int (acao) / int (numero de copias) / int (qtd de caracteres do cliente)
     // / string (nome do cliente) / int (qtd de caracteres do arquivo) / string(nome) / tamanho / bytearray
     private static void fazUpload(Socket sock, int acao) throws IOException {
-        Scanner scanner = new Scanner(System.in);
-
         //Pega o nome do arquivo e o tamanho, transformando em bytearray
         System.out.println("Digite o nome do arquivo:");
         String nomeArquivo = scanner.next();
@@ -131,10 +81,7 @@ public class FileClient {
 
         //Pega o file e o seu tamanho, transformando em bytearray
         File myFile = new File (pathArquivo);
-        byte [] conteudoArquivoByteArray  = new byte [(int)myFile.length()];
-        FileInputStream fis = new FileInputStream(myFile);
-        BufferedInputStream bis = new BufferedInputStream(fis);
-        bis.read(conteudoArquivoByteArray,0,conteudoArquivoByteArray.length);
+        byte [] conteudoArquivoByteArray = ByteUtils.fileToByteArray(myFile);
 
         ObjectOutputStream os = new ObjectOutputStream(sock.getOutputStream());
         os.writeInt(acao);
@@ -143,10 +90,65 @@ public class FileClient {
         os.writeUTF(nomeArquivo);
         os.writeObject(conteudoArquivoByteArray);
 
-        System.out.println("Sending " + pathArquivo + "(" + myFile.length() + " bytes)");
-
+        System.out.println("Sending " + nomeArquivo + "(" + conteudoArquivoByteArray.length + " bytes)");
         os.flush();
 
         System.out.println("Done.");
     }
+
+    private static void listaArquivos(Socket sock) throws IOException {
+        /*
+        ObjectOutputStream os = new ObjectOutputStream(sock.getOutputStream()); //Camada de Enlace
+        os.writeUTF(CLIENT_NAME);
+        os.flush();
+        */
+
+        ObjectInputStream ois = new ObjectInputStream(sock.getInputStream());
+        String nomesArquivos = ois.readUTF();
+        String[] listaNomesArquivos = nomesArquivos.split(",");
+        System.out.println("Arquivos encontrados: ");
+        for (String nome: listaNomesArquivos) {
+            System.out.println("\t" + nome);
+        }
+    }
+
+
+
+    // server -> maquinas (n copias) -> cliente -> arquivos
+    private static void fazDownload(Socket sock, int acao) throws IOException {
+        System.out.println("Digite o nome do arquivo:");
+        String nomeArquivo = scanner.next();
+
+        /* Camada de Enlace */
+        ObjectOutputStream os = new ObjectOutputStream(sock.getOutputStream());
+        os.writeInt(acao);
+        os.writeUTF(CLIENT_NAME);
+        os.writeUTF(nomeArquivo);
+        os.flush();
+
+        //listaArquivos(sock);
+
+        System.out.println("Digite onde gostaria de salvar o arquivo:");
+        String path = scanner.next();
+
+        ObjectInputStream ois = new ObjectInputStream(sock.getInputStream());
+        Object bis = null;
+        try {
+            bis = ois.readObject();
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+        if(bis != null) {
+            System.out.println(bis);
+        }
+        byte [] file = (byte[]) bis;
+
+        FileOutputStream fos = new FileOutputStream(path);
+        BufferedOutputStream bos = new BufferedOutputStream(fos);
+        if(file != null) {
+            bos.write(file, 0 , file.length);
+        }
+        bos.flush();
+    }
+
 }

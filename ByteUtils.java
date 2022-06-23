@@ -1,3 +1,4 @@
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -75,5 +76,13 @@ public class ByteUtils {
         }
 
         return buff.array();
+    }
+
+    public static byte[] fileToByteArray(File myFile) throws IOException {
+        byte [] conteudoArquivoByteArray  = new byte [(int)myFile.length()];
+        FileInputStream fis = new FileInputStream(myFile);
+        BufferedInputStream bis = new BufferedInputStream(fis);
+        bis.read(conteudoArquivoByteArray,0,conteudoArquivoByteArray.length);
+        return conteudoArquivoByteArray;
     }
 }

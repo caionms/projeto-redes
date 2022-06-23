@@ -21,24 +21,24 @@ public class FileServer {
         ServerSocket servsock = null;
         Socket sock = null;
         try {
-            servsock = new ServerSocket(SOCKET_PORT);
+            servsock = new ServerSocket(SOCKET_PORT); /* Camada de Rede */
+
             while (true) {
                 System.out.println("Aguardando...");
                 try {
-
-                    sock = servsock.accept();
+                    sock = NetworkLayer.aceitaConexao(servsock);
                     System.out.println("Accepted connection : " + sock);
 
-                    ois = new ObjectInputStream(sock.getInputStream());
+                    ois = new ObjectInputStream(sock.getInputStream()); //Camada de Enlace
 
                     int acao = ois.readInt();
 
                     switch(acao) {
                         case 1:
-                            fazDownload();
+                            fazUpload(ois);
                             break;
                         case 2:
-                            fazUpload(ois);
+                            fazDownload(sock, ois);
                             break;
                     }
 
@@ -53,21 +53,7 @@ public class FileServer {
         }
     }
 
-    public static void fazDownload() {
-        //Todo pegar do input o nome do cliente e nome do arquivo, procura nas máquinas e devolve o contéudo
-        //No contéudo deve ter o tamanho do nome do arquivo, o nome do arquivo, o tamanho do arquivo e o arquivo
-        //Pegar do método original
-    }
-
     public static void fazUpload(ObjectInputStream ois) throws IOException {
-        System.out.println("Entrou");
-        /*
-         * 1 - download
-         * 2 - upload
-         * 3 - leitura
-         * 4 - remocao
-         * 5 - relatorio
-         */
         //Pega a acao
         int nCopias = ois.readInt();
         String nomeCliente = ois.readUTF();
@@ -86,7 +72,6 @@ public class FileServer {
         System.out.println(nomeCliente);
         System.out.println(nomeArquivo);
 
-
         byte [] file = (byte[]) bis;
 
         for(int i = 1 ; i <= nCopias ; i++ ) {
@@ -102,5 +87,46 @@ public class FileServer {
         }
 
         System.out.println("O upload foi feito com sucesso!");
+    }
+
+    //TODO: Alterar para percorrer todas as pastas e devolver para o cliente a string com os files.
+    public static void listarArquivos(Socket sock, String nomeCliente) throws IOException {
+        // Building array of files.
+        File folder = new File("./server/1/" + nomeCliente);
+        File[] listOfFiles = folder.listFiles();
+
+        //String nomesArquivos = "";
+        System.out.println("Arquivos encontrados: ");
+        // Iterating array of files for printing name of all files present in the directory.
+        for (int i = 0; i < listOfFiles.length; i++) {
+            System.out.println("\t" + listOfFiles[i].getName());
+            //nomesArquivos += "\n\t" + listOfFiles[i].getName();
+        }
+
+        /*
+        ObjectOutputStream os = new ObjectOutputStream(sock.getOutputStream()); //Camada de Enlace
+        os.writeUTF(nomesArquivos);
+        os.flush();
+         */
+    }
+
+    //TODO: Alterar para percorrer todas as pastas.
+    public static void fazDownload(Socket sock, ObjectInputStream ois) throws IOException {
+        String nomeCliente = ois.readUTF();
+        String nomeArquivo = ois.readUTF();
+        String path = "./server/1/" + nomeCliente + "/" + nomeArquivo;
+        File fileEncontrado = new File(path);
+        byte [] conteudoArquivoByteArray = ByteUtils.fileToByteArray(fileEncontrado);
+
+        ObjectOutputStream os = new ObjectOutputStream(sock.getOutputStream());
+        os.writeObject(conteudoArquivoByteArray);
+
+        System.out.println("Downloading " + path + "(" + fileEncontrado.length() + " bytes)");
+
+        os.flush();
+
+        //Todo pegar do input o nome do cliente e nome do arquivo, procura nas máquinas e devolve o contéudo
+        //No contéudo deve ter o tamanho do nome do arquivo, o nome do arquivo, o tamanho do arquivo e o arquivo
+        //Pegar do método original
     }
 }
