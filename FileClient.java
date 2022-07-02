@@ -59,6 +59,12 @@ public class FileClient {
                 case 2:
                     fazDownload(sock, controle);
                     break;
+                case 3:
+                    removeArquivo(sock, controle);
+                    break;
+                case 4:
+                    alterarNivel(sock, controle);
+                    break;
             }
         }
         finally {
@@ -110,8 +116,6 @@ public class FileClient {
         }
     }
 
-
-
     // server -> maquinas (n copias) -> cliente -> arquivos
     private static void fazDownload(Socket sock, int acao) throws IOException {
         System.out.println("Digite o nome do arquivo:");
@@ -120,7 +124,6 @@ public class FileClient {
         /* Camada de Enlace */
         ObjectOutputStream os = new ObjectOutputStream(sock.getOutputStream());
         os.writeInt(acao);
-        os.writeUTF(CLIENT_NAME);
         os.writeUTF(nomeArquivo);
         os.flush();
 
@@ -147,6 +150,30 @@ public class FileClient {
             bos.write(file, 0 , file.length);
         }
         bos.flush();
+    }
+
+    private static void removeArquivo(Socket sock, int acao) throws IOException {
+        System.out.println("Digite o nome do arquivo que deseja remover:");
+        String nomeArquivo = scanner.next();
+
+        ObjectOutputStream os = new ObjectOutputStream(sock.getOutputStream());
+        os.writeInt(acao);
+        os.writeUTF(nomeArquivo);
+        os.flush();
+    }
+
+    private static void alterarNivel(Socket sock, int acao) throws IOException {
+        System.out.println("Digite o nome do arquivo que deseja alterar o nível:");
+        String nomeArquivo = scanner.next();
+
+        System.out.println("Digite o novo nível de tolerância a falhas do arquivo " + nomeArquivo +":");
+        int nivel = scanner.nextInt();
+
+        ObjectOutputStream os = new ObjectOutputStream(sock.getOutputStream());
+        os.writeInt(acao);
+        os.writeUTF(nomeArquivo);
+        os.writeInt(nivel);
+        os.flush();
     }
 
 }
