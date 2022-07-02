@@ -14,7 +14,7 @@ public class FileServer {
     public final static int FILE_SIZE = 6022386; // file size temporary hard coded
     // should bigger than the file to be downloaded
 
-    public static void main (String [] args ) throws IOException {
+    public static void main(String[] args) throws IOException {
         System.out.println("Digite a porta desejada:");
         Scanner scanner = new Scanner(System.in);
         SOCKET_PORT = Integer.parseInt(scanner.next());
@@ -26,6 +26,7 @@ public class FileServer {
             servsock = new ServerSocket(SOCKET_PORT); /* Camada de Rede */
 
             while (true) {
+
                 System.out.println("Aguardando...");
                 try {
                     sock = NetworkLayer.aceitaConexao(servsock);
@@ -42,7 +43,7 @@ public class FileServer {
 
                     int acao = ois.readInt();
 
-                    switch(acao) {
+                    switch (acao) {
                         case 1:
                             fazUpload(ois, nomeCliente);
                             break;
@@ -62,8 +63,7 @@ public class FileServer {
                     if (sock != null) sock.close();
                 }
             }
-        }
-        finally {
+        } finally {
             if (servsock != null) servsock.close();
         }
     }
@@ -78,26 +78,22 @@ public class FileServer {
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
-        if(bis != null) {
+        if (bis != null) {
             System.out.println(bis);
         }
 
-        System.out.println(nCopias);
-        System.out.println(nomeCliente);
-        System.out.println(nomeArquivo);
-
         //Faz uma cópia dos dados do bytearray
-        byte [] file = (byte[]) bis;
+        byte[] file = (byte[]) bis;
 
         //Percorre as máquinas criando as pastas e fazendo upload dos arquivos
-        for(int i = 1 ; i <= nCopias ; i++ ) {
+        for (int i = 1; i <= nCopias; i++) {
             new File("./server/" + i).mkdirs();
             new File("./server/" + i + "/" + nomeCliente).mkdirs();
             String path = SERVER_DIRECTORY + i + "\\" + nomeCliente + "\\" + nomeArquivo + ".txt";
             FileOutputStream fos = new FileOutputStream(path);
             BufferedOutputStream bos = new BufferedOutputStream(fos);
-            if(file != null) {
-                bos.write(file, 0 , file.length);
+            if (file != null) {
+                bos.write(file, 0, file.length);
             }
             bos.flush();
         }
@@ -110,15 +106,16 @@ public class FileServer {
 
         //Percorre todas as máquinas e salva os arquivos sem repetir
         File server = new File("./server");
-        File[] serverFolders = server.listFiles();
-        int qtdMaquinas = serverFolders.length; //Qtd de máquinas
-        for(int i=1 ; i<=qtdMaquinas ; i++) {
-            File maquina = new File("./server/" + i + "/" + nomeCliente);
-            File[] maquinaFiles = maquina.listFiles();
-            int qtdArquivos = maquinaFiles.length; //Qtd de máquinas
-            for(int j=0 ; j<qtdArquivos ; j++) {
-                if(!listaDeArquivos.contains(maquinaFiles[j].getName()))
-                    listaDeArquivos.add(maquinaFiles[j].getName());
+        File[] serverFolders = server.listFiles(); //Cada file é uma máquina
+        for (File actualFolder : serverFolders) {
+            File maquina = new File(actualFolder.getPath() + "/" + nomeCliente);
+            if (maquina.exists()) {
+                File[] maquinaFiles = maquina.listFiles();
+                int qtdArquivos = maquinaFiles.length; //Qtd de máquinas
+                for (int j = 0; j < qtdArquivos; j++) {
+                    if (!listaDeArquivos.contains(maquinaFiles[j].getName()))
+                        listaDeArquivos.add(maquinaFiles[j].getName());
+                }
             }
         }
 
@@ -130,7 +127,8 @@ public class FileServer {
             System.out.println("\t" + listaDeArquivos.get(i));
             nomesArquivos += listaDeArquivos.get(i) + ",";
         }
-
+        if (nomesArquivos.isEmpty())
+            nomesArquivos = "Não existem arquivos deste usuário.";
         //Guarda no socket os nomes dos arquivos do cliente
         ObjectOutputStream os = new ObjectOutputStream(sock.getOutputStream()); //Camada de Enlace
         os.writeUTF(nomesArquivos);
@@ -143,24 +141,24 @@ public class FileServer {
         //Pega todas as máquinas
         File server = new File("./server");
         File[] serverFolders = server.listFiles();
-        int qtdMaquinas = serverFolders.length; //Qtd de máquinas
-        for(int i=1 ; i<=qtdMaquinas ; i++) {
-            try {
-                String path = "./server/" + i + "/" + nomeCliente + "/" + nomeArquivo;
-                File fileEncontrado = new File(path);
-                byte [] conteudoArquivoByteArray = ByteUtils.fileToByteArray(fileEncontrado);
+        for (File actualFolder : serverFolders) {
+            File clienteFolder = new File(actualFolder.getPath() + "/" + nomeCliente);
+            if (clienteFolder.exists()) {//Se na máquina existe uma pasta do cliente
+                File fileEncontrado = new File(clienteFolder.getPath() + "/" + nomeArquivo);
+                if (fileEncontrado.exists()) {
+                    System.out.println("Entrou arq ");
+                    byte[] conteudoArquivoByteArray = ByteUtils.fileToByteArray(fileEncontrado);
 
-                //Guarda o conteúdo no sock para o cliente
-                ObjectOutputStream os = new ObjectOutputStream(sock.getOutputStream());
-                os.writeObject(conteudoArquivoByteArray);
+                    //Guarda o conteúdo no sock para o cliente
+                    ObjectOutputStream os = new ObjectOutputStream(sock.getOutputStream());
+                    os.writeObject(conteudoArquivoByteArray);
 
-                System.out.println("Baixando " + path + "(" + fileEncontrado.length() + " bytes) da máquina " + i);
+                    System.out.println("Baixando " + fileEncontrado.getPath() + "(" + fileEncontrado.length() + " bytes) da máquina " + actualFolder.getName());
 
-                os.flush();
+                    os.flush();
 
-                return;
-            } catch (FileNotFoundException ignore) {
-                System.out.println("Arquivo não encontrado na máquina " + i);
+                    return;
+                }
             }
         }
         System.out.println("Sentimos muito... O arquivo foi perdido no servidor...");
@@ -169,18 +167,28 @@ public class FileServer {
     public static void removeArquivo(Socket sock, ObjectInputStream ois, String nomeCliente) throws IOException {
         //Faz leitura dos dados para encontrar o arquivo
         String nomeArquivo = ois.readUTF();
-
         //Pega todas as máquinas
         File server = new File("./server");
         File[] serverFolders = server.listFiles();
-        int qtdMaquinas = serverFolders.length; //Qtd de máquinas
-        for(int i=1 ; i<=qtdMaquinas ; i++) {
-            String path = "./server/" + i + "/" + nomeCliente + "/" + nomeArquivo;
-            File fileEncontrado = new File(path);
-            if (fileEncontrado.delete()) {
-                System.out.println("Arquivo removido da máquina " + i);
-            } else {
-                System.out.println("Arquivo não existe na máquina " + i);
+        for (File actualFolder : serverFolders) {
+            File clienteFolder = new File(actualFolder.getPath() + "/" + nomeCliente);
+            if (clienteFolder.exists()) {//Se na máquina existe uma pasta do cliente
+                File fileEncontrado = new File(clienteFolder.getPath() + "/" + nomeArquivo);
+                if (fileEncontrado.exists()) {
+                    if(fileEncontrado.delete())
+                        System.out.println("Arquivo removido da máquina " + actualFolder.getName());
+                    else
+                        System.out.println("Não foi possível remover da máquina " + actualFolder.getName());
+                } else {
+                    System.out.println("Arquivo não existe na máquina " + actualFolder.getName());
+                }
+                //Apaga as pastas, caso estejam vazias
+                if (clienteFolder.length() == 0) {
+                    clienteFolder.delete();
+                }
+                if (actualFolder.length() == 0) {
+                    actualFolder.delete();
+                }
             }
         }
     }
@@ -197,56 +205,67 @@ public class FileServer {
         File server = new File("./server");
         File[] serverFolders = server.listFiles();
         int qtdMaquinas = serverFolders.length; //Qtd de máquinas
-        for(int i=1 ; i<=qtdMaquinas ; i++) {
-            String path = "./server/" + i + "/" + nomeCliente + "/" + nomeArquivo;
-            fileAtual = new File(path);
-            if(fileAtual.exists()){
-                qtdCopiasExistentes++;
-                fileAtual = fileEncontrado;
+        for (File actualFolder : serverFolders) {
+            File clienteFolder = new File(actualFolder.getPath() + "/" + nomeCliente);
+            if (clienteFolder.exists()) {//Se na máquina existe uma pasta do cliente
+                fileAtual = new File(clienteFolder.getPath() + "/" + nomeArquivo);
+                if (fileAtual.exists()) {
+                    qtdCopiasExistentes++;
+                    fileEncontrado = fileAtual;
+                }
             }
-
         }
 
-        if(qtdCopiasExistentes == 0){
+        if (qtdCopiasExistentes == 0) {
             System.out.println("O arquivo " + nomeArquivo + " não existe no servidor");
             return;
         }
 
-        byte [] conteudoArquivoByteArray = ByteUtils.fileToByteArray(fileAtual);
-        if(qtdCopiasExistentes == nivel)
+        byte[] conteudoArquivoByteArray = ByteUtils.fileToByteArray(fileEncontrado);
+        if (qtdCopiasExistentes == nivel)
             return;
-        else if(nivel > qtdCopiasExistentes){
+        else if (nivel > qtdCopiasExistentes) {
             //Percorre as máquinas criando as pastas e fazendo upload dos arquivos
-            for(int i = 1 ; nivel > qtdCopiasExistentes ; i++ ) {
+            for (int i = 1; nivel > qtdCopiasExistentes; i++) {
                 String path = SERVER_DIRECTORY + i + "\\" + nomeCliente + "\\" + nomeArquivo;
-                if(!new File(path).exists()) {
+                if (!new File(path).exists()) {
                     new File("./server/" + i).mkdirs();
                     new File("./server/" + i + "/" + nomeCliente).mkdirs();
                     FileOutputStream fos = new FileOutputStream(path);
                     BufferedOutputStream bos = new BufferedOutputStream(fos);
-                    if(conteudoArquivoByteArray != null) {
-                        bos.write(conteudoArquivoByteArray, 0 , conteudoArquivoByteArray.length);
+                    if (conteudoArquivoByteArray != null) {
+                        bos.write(conteudoArquivoByteArray, 0, conteudoArquivoByteArray.length);
                     }
                     bos.flush();
                     qtdCopiasExistentes++;
                 }
             }
-        }
-        else {
+        } else {
             int countRemocao = 0;
-            //Pega todas as máquinas
-            for(int i=1 ; i<=qtdMaquinas ; i++) {
-
-                if((qtdCopiasExistentes - countRemocao) == nivel) //chegou no nivel esperado
+            server = new File("./server");
+            serverFolders = server.listFiles();
+            for (File actualFolder : serverFolders) {
+                if ((qtdCopiasExistentes - countRemocao) == nivel) //chegou no nivel esperado
                     return;
-
-                String path = "./server/" + i + "/" + nomeCliente + "/" + nomeArquivo;
-                fileEncontrado = new File(path);
-                if (fileEncontrado.delete()) {
-                    countRemocao++;
-                    System.out.println("Arquivo removido da máquina " + i);
-                } else {
-                    System.out.println("Arquivo não existe na máquina " + i);
+                File clienteFolder = new File(actualFolder.getPath() + "/" + nomeCliente);
+                if (clienteFolder.exists()) {//Se na máquina existe uma pasta do cliente
+                    fileEncontrado = new File(clienteFolder.getPath() + "/" + nomeArquivo);
+                    if (fileEncontrado.exists()) {
+                        if(fileEncontrado.delete()){
+                            countRemocao++;
+                            System.out.println("Arquivo removido da máquina " + actualFolder.getName());
+                            //Apaga as pastas, caso estejam vazias
+                            if (clienteFolder.length() == 0) {
+                                clienteFolder.delete();
+                            }
+                            if (actualFolder.length() == 0) {
+                                actualFolder.delete();
+                            }
+                        }
+                        else {
+                            System.out.println("Falha ao apagar o arquivo na máquina " + actualFolder.getName());
+                        }
+                    }
                 }
             }
         }

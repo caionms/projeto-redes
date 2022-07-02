@@ -9,6 +9,8 @@
 *.user
 *.userosscache
 *.sln.docstates
+out/
+FazendoDownload/
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
@@ -352,4 +354,4 @@ MigrationBackup/
 # Intellij
 .idea/
 *.iml
-.out/production/TrabRedes
+.out/

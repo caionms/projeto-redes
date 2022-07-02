@@ -78,7 +78,7 @@ public class FileClient {
     // int (acao) / int (numero de copias) / int (qtd de caracteres do cliente)
     // / string (nome do cliente) / int (qtd de caracteres do arquivo) / string(nome) / tamanho / bytearray
     private static void fazUpload(Socket sock, int acao) throws IOException {
-        System.out.println("Digite o nome do arquivo que você quer baixar:");
+        System.out.println("Digite o nome do arquivo que você quer fazer upload:");
         String nomeArquivo = scanner.next();
 
         System.out.println("Digite a quantidade de copias:");
@@ -118,7 +118,7 @@ public class FileClient {
 
     // server -> maquinas (n copias) -> cliente -> arquivos
     private static void fazDownload(Socket sock, int acao) throws IOException {
-        System.out.println("Digite o nome do arquivo:");
+        System.out.println("Digite o nome do arquivo que deseja baixar:");
         String nomeArquivo = scanner.next();
 
         /* Camada de Enlace */
@@ -127,13 +127,11 @@ public class FileClient {
         os.writeUTF(nomeArquivo);
         os.flush();
 
-        //listaArquivos(sock);
-
-        System.out.println("Digite onde gostaria de salvar o arquivo:");
+        System.out.println("Digite o path para salvar:");
         String path = scanner.next();
 
         ObjectInputStream ois = new ObjectInputStream(sock.getInputStream());
-        Object bis = null;
+        Object bis;
         try {
             bis = ois.readObject();
         } catch (ClassNotFoundException e) {
