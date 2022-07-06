@@ -9,10 +9,7 @@ import java.util.Scanner;
 public class FileServer {
     public static int SOCKET_PORT;  // Porta
 
-    public static String SERVER_DIRECTORY = ".\\server\\";  // you may change this
-
-    public final static int FILE_SIZE = 6022386; // file size temporary hard coded
-    // should bigger than the file to be downloaded
+    public static String SERVER_DIRECTORY = ".\\server\\";
 
     public static void main(String[] args) throws IOException {
         System.out.println("Digite a porta desejada:");
@@ -23,13 +20,13 @@ public class FileServer {
         ServerSocket servsock = null;
         Socket sock = null;
         try {
-            servsock = new ServerSocket(SOCKET_PORT); /* Camada de Rede */
+            servsock = new ServerSocket(SOCKET_PORT);
 
             while (true) {
 
                 System.out.println("Aguardando...");
                 try {
-                    sock = NetworkLayer.aceitaConexao(servsock);
+                    sock = servsock.accept();
                     System.out.println("Accepted connection : " + sock);
 
                     //Recebe do o nome do cliente para listagem dos arquivos
@@ -45,7 +42,7 @@ public class FileServer {
 
                     switch (acao) {
                         case 1:
-                            fazUpload(ois, nomeCliente);
+                            fazUpload(sock, ois, nomeCliente);
                             break;
                         case 2:
                             fazDownload(sock, ois, nomeCliente);
@@ -68,7 +65,7 @@ public class FileServer {
         }
     }
 
-    public static void fazUpload(ObjectInputStream ois, String nomeCliente) throws IOException {
+    public static void fazUpload(Socket sock, ObjectInputStream ois, String nomeCliente) throws IOException {
         //Pega os dados do sock
         int nCopias = ois.readInt();
         String nomeArquivo = ois.readUTF();
@@ -89,7 +86,7 @@ public class FileServer {
         for (int i = 1; i <= nCopias; i++) {
             new File("./server/" + i).mkdirs();
             new File("./server/" + i + "/" + nomeCliente).mkdirs();
-            String path = SERVER_DIRECTORY + i + "\\" + nomeCliente + "\\" + nomeArquivo + ".txt";
+            String path = SERVER_DIRECTORY + i + "\\" + nomeCliente + "\\" + nomeArquivo;
             FileOutputStream fos = new FileOutputStream(path);
             BufferedOutputStream bos = new BufferedOutputStream(fos);
             if (file != null) {
@@ -98,6 +95,9 @@ public class FileServer {
             bos.flush();
         }
 
+        ObjectOutputStream os = new ObjectOutputStream(sock.getOutputStream());
+        os.writeUTF("O upload foi feito com sucesso!");
+        os.flush();
         System.out.println("O upload foi feito com sucesso!");
     }
 
@@ -130,7 +130,7 @@ public class FileServer {
         if (nomesArquivos.isEmpty())
             nomesArquivos = "Não existem arquivos deste usuário.";
         //Guarda no socket os nomes dos arquivos do cliente
-        ObjectOutputStream os = new ObjectOutputStream(sock.getOutputStream()); //Camada de Enlace
+        ObjectOutputStream os = new ObjectOutputStream(sock.getOutputStream());
         os.writeUTF(nomesArquivos);
         os.flush();
     }
@@ -146,7 +146,6 @@ public class FileServer {
             if (clienteFolder.exists()) {//Se na máquina existe uma pasta do cliente
                 File fileEncontrado = new File(clienteFolder.getPath() + "/" + nomeArquivo);
                 if (fileEncontrado.exists()) {
-                    System.out.println("Entrou arq ");
                     byte[] conteudoArquivoByteArray = ByteUtils.fileToByteArray(fileEncontrado);
 
                     //Guarda o conteúdo no sock para o cliente
@@ -155,13 +154,16 @@ public class FileServer {
 
                     System.out.println("Baixando " + fileEncontrado.getPath() + "(" + fileEncontrado.length() + " bytes) da máquina " + actualFolder.getName());
 
+                    os.writeUTF("Download feito com sucesso!");
                     os.flush();
-
                     return;
                 }
             }
         }
-        System.out.println("Sentimos muito... O arquivo foi perdido no servidor...");
+        //Guarda o conteúdo no sock para o cliente
+        ObjectOutputStream os = new ObjectOutputStream(sock.getOutputStream());
+        os.writeUTF("Sentimos muito... O arquivo foi perdido no servidor...");
+        os.flush();
     }
 
     public static void removeArquivo(Socket sock, ObjectInputStream ois, String nomeCliente) throws IOException {
@@ -191,6 +193,9 @@ public class FileServer {
                 }
             }
         }
+        ObjectOutputStream os = new ObjectOutputStream(sock.getOutputStream());
+        os.writeUTF("Remoção concluida!");
+        os.flush();
     }
 
     public static void alteraNivel(Socket sock, ObjectInputStream ois, String nomeCliente) throws IOException {

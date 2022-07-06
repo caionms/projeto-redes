@@ -36,12 +36,12 @@ public class FileClient {
         Socket sock = null;
 
         try {
-            sock = new Socket(SERVER, SOCKET_PORT); //Transporte - Tentando fazer conexão com a rede
+            sock = new Socket(SERVER, SOCKET_PORT);
 
             System.out.println("Connecting...");
 
             //Envia o nome do cliente para listagem dos nomes dos arquivos
-            ObjectOutputStream oos = new ObjectOutputStream(sock.getOutputStream()); //Camada de Enlace
+            ObjectOutputStream oos = new ObjectOutputStream(sock.getOutputStream());
             oos.writeUTF(CLIENT_NAME);
             oos.flush();
 
@@ -99,10 +99,12 @@ public class FileClient {
         os.writeUTF(nomeArquivo);
         os.writeObject(conteudoArquivoByteArray);
 
-        System.out.println("Sending " + nomeArquivo + "(" + conteudoArquivoByteArray.length + " bytes)");
+        System.out.println("Enviando " + nomeArquivo + "(" + conteudoArquivoByteArray.length + " bytes)");
         os.flush();
 
-        System.out.println("Done.");
+        ObjectInputStream ois = new ObjectInputStream(sock.getInputStream());
+        String texto = ois.readUTF();
+        System.out.println(texto);
     }
 
     private static void listaArquivos(Socket sock) throws IOException {
@@ -121,7 +123,6 @@ public class FileClient {
         System.out.println("Digite o nome do arquivo que deseja baixar:");
         String nomeArquivo = scanner.next();
 
-        /* Camada de Enlace */
         ObjectOutputStream os = new ObjectOutputStream(sock.getOutputStream());
         os.writeInt(acao);
         os.writeUTF(nomeArquivo);
@@ -148,6 +149,7 @@ public class FileClient {
             bos.write(file, 0 , file.length);
         }
         bos.flush();
+        System.out.println(ois.readUTF());
     }
 
     private static void removeArquivo(Socket sock, int acao) throws IOException {
@@ -158,6 +160,10 @@ public class FileClient {
         os.writeInt(acao);
         os.writeUTF(nomeArquivo);
         os.flush();
+
+        ObjectInputStream ois = new ObjectInputStream(sock.getInputStream());
+        String texto = ois.readUTF();
+        System.out.println(texto);
     }
 
     private static void alterarNivel(Socket sock, int acao) throws IOException {
@@ -172,6 +178,8 @@ public class FileClient {
         os.writeUTF(nomeArquivo);
         os.writeInt(nivel);
         os.flush();
+
+        System.out.println("Nível alterado com sucesso!");
     }
 
 }
