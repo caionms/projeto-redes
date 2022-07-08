@@ -39,10 +39,11 @@ A camada física será simulada através de sockets, utilizando as bibliotecas J
 Para rodar a aplicação, primeiro deve-se executar a classe FileServer e selecionar uma porta de sua preferência. Feito isso, o servidor irá estar pronto para receber conexões e ficará no estado aguardando.
 
 Agora, pode-se executar a classe FileClient. Nela, deve ser passado o ip do servidor (Ex: O IPV4 do Adaptador Ethernet), a porta utilizada na inicialização do FileServer e o nome do cliente. A partir daí, se possível, a conexão vai ser feita com o servidor e vai ser apresentado na tela do cliente todos os arquivos associados com o nome do cliente, caso haja. A partir desse momento, 4 opções podem ser escolhidas correspondentes a cada funcionalidade da aplicação:
-1. Upload de um arquivo.
-2. Download de um arquivo.
-3. Remoção de um arquivo.
-4. Alterar nível de tolerância a falhas.
+1. Upload de um arquivo. Nessa funcionalidade, o cliente passa o nome do arquivo a ser salvo, o nível de tolerância a falhas e o path para o arquivo existente na máquina do cliente. O servidor então irá pegar essas informações e guardar n cópias desse arquivo, onde o número de cópias é relacionado ao nível de tolerância a falhas.
+2. Download de um arquivo. Nessa funcionalidade, o cliente passa o nome do arquivo salvo no servidor que deseja baixar e passa o path onde deseja salvar na sua máquina. O servidor então procura uma cópia desse arquivo e caso encontre, envia os dados desse arquivo em forma de bytearray para ser salvo na máquina do cliente.
+3. Remoção de um arquivo. Nessa funcionalidade, o cliente passa o nome do arquivo salvo no servidor que deseja remover. O servidor então percorre em todas as suas máquinas e vai removendo cada cópia desse arquivo do servidor.
+4. Alterar nível de tolerância a falhas. Nessa funcionalidade, o cliente passa o nome do arquivo salvo no servidor que vai ter o nível de tolerância alterado e o novo nível de tolerância. Caso o nível tenha diminuido, o servidor percorre suas máquinas removendo a quantidade necessária de cópias até atingir o nível desejado. Caso o nível tenha aumentado, o servidor percorre suas máquinas e adiciona a quantidade necessária de cópias até atingir o nível desejado.
+5. Existe uma funcionalidade implícita, que é a listagem de arquivos do cliente. Ao digitar o nome do cliente na inicialização, o FileClient envia para o FileServer essa informação e retorna uma lista de nome de arquivos existentes para aquele cliente correspondente.
 
 ## OBSERVAÇÕES: 
 
