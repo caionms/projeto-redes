@@ -21,7 +21,7 @@ Na nossa aplicação fazemos o uso do protocolo de transporte FTP pelo fato de n
 
 ## CAMADA DE REDE: 
 
-Sabendo que a camada de rede é responsável por roteamento e repasse de dados além de estabelecimento de conexão, simulamos a camada de rede utilizando as bibliotecas JAVA java.net.socket e java.net.ServerSocket. A partir delas utilizamos o objeto servsock que é a porta de destino, definida ao executar o servidor. Como o próprio nome já intui, esta é responsável por aceitar ou recusar as conexões propostas pela aplicação cliente. 
+Sabendo que a camada de rede é responsável por roteamento e repasse de dados além de estabelecimento de conexão, simulamos a camada de rede utilizando as bibliotecas JAVA java.net.socket e java.net.ServerSocket. A partir delas utilizamos o objeto ServerSocket que tem como parâmetro a porta a ser utilizada, definida ao executar o servidor. Como o próprio nome já intui, esta é responsável por aceitar ou recusar as conexões propostas pela aplicação cliente. 
 
 O cliente, então, pode utilizar a classe de socket, junto da porta e o IP de destino, permitindo uma comunicação bidirecional entre processos. Ou seja, vai existir um socket datagrama contendo endereço de IP e porta de destino final, utilizando funções da própria biblioteca citada, para enviar e receber esses pacotes para e das camadas inferiores. 
 
