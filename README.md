@@ -2,6 +2,17 @@
 # Trabalho avaliativo de MATA59 - Redes de Computadores
 ### Álvaro Oliveira, Caio Santos, Carlos Neto e Vanessa Araújo.
 
+## ARQUITETURA CLIENTE-SERVIDOR:
+
+A arquitetura cliente servidor, que é o ponta pé inicial para o desenvolvimento do nosso projeto. 
+
+Há um hospedeiro sempre em funcionamento, denominado servidor, que atende a requisições de muitos outros hospedeiros, denominados clientes. Seguindo os padrões desta arquitetura, não há comunicação direta entre os clientes. O servidor tem um endereço fixo, bem conhecido, o endereço IP. Por causa dessa característica do servidor e pelo fato de ele estar sempre em funcionamento, um cliente sempre pode contatá-lo.
+
+### SERVIDOR:
+É responsável pelo provimento do serviço, está sempre ligado e possui endereço de IP permanente, isso pela necessidade de ser conhecido por todos os clientes para fazer suas requisições.
+
+### CLIENTE:
+Busca o serviço oferecido pelo servidor. Comunica-se com o servidor e pode estar conectado intermitentemente (Entrar e sair da rede sem nenhum problema). Pode ter endereços IP dinâmicos e não se comunica diretamente com outros clientes; 
 
 ## CAMADA DE APLICAÇÃO: 
 
@@ -30,11 +41,11 @@ O cliente, então, pode utilizar a classe de socket, junto da porta e o IP de de
 A camada de enlace fica encapsulada com a camada física e isso tudo é simulado através do uso dos Sockets que nossa aplicação utiliza. 
 
 
-## CAMADA FÍSICA: 
+## CAMADA FÍSICA:
 
 A camada física será simulada através de sockets, utilizando as bibliotecas JAVA <java.net.socket> e <java.net.ServerSocket> com datagramas. Esse método, bem como a camada física real, não garante confiabilidade dos dados. 
 
-## Rodando a aplicação: 
+## RODANDO A APLICAÇÃO: 
 
 Para rodar a aplicação, primeiro deve-se executar a classe FileServer e selecionar uma porta de sua preferência. Feito isso, o servidor irá estar pronto para receber conexões e ficará no estado aguardando.
 
