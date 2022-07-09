@@ -64,4 +64,6 @@ Agora, pode-se executar a classe FileClient. Nela, deve ser passado o ip do serv
 
 ## OBSERVAÇÕES: 
 
-Nosso programa é sensível a falhas, porém, qualquer problema que houver com o arquivo e o carregamento do mesmo em memória, a JVM detectará uma “exception”, o que garantirá que o problema irá ser detectado no log do programa. 
+ - Nosso programa é sensível a falhas, porém, qualquer problema que houver com o arquivo e o carregamento do mesmo em memória, a JVM detectará uma “exception”, o que garantirá que o problema irá ser detectado no log do programa.
+
+- Em relação a classe NetworkLayer que foi falada no vídeo, achamos uma melhor decisão deixá-la em uma classe só, para centralizar seus métodoso na classe principal.
