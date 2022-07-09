@@ -12,7 +12,13 @@ Há um hospedeiro sempre em funcionamento, denominado servidor, que atende a req
 É responsável pelo provimento do serviço, está sempre ligado e possui endereço de IP permanente, isso pela necessidade de ser conhecido por todos os clientes para fazer suas requisições.
 
 ### CLIENTE:
-Busca o serviço oferecido pelo servidor. Comunica-se com o servidor e pode estar conectado intermitentemente (Entrar e sair da rede sem nenhum problema). Pode ter endereços IP dinâmicos e não se comunica diretamente com outros clientes; 
+Busca o serviço oferecido pelo servidor. Comunica-se com o servidor e pode estar conectado intermitentemente (Entrar e sair da rede sem nenhum problema). Pode ter endereços IP dinâmicos e não se comunica diretamente com outros clientes;
+
+## PILHA TCP/IP
+
+<p align="center">
+ <img src="./assets/pilha-tcp-ip.png"/>
+</p>
 
 ## CAMADA DE APLICAÇÃO: 
 
