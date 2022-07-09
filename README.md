@@ -17,7 +17,7 @@ Busca o serviço oferecido pelo servidor. Comunica-se com o servidor e pode esta
 ## PILHA TCP/IP
 
 <p align="center">
- <img src="./assets/pilha-tcp-ip.png"/>
+ <img src="./assets/pilha-tcp-ip.png" style="width:180px;" />
 </p>
 
 ## CAMADA DE APLICAÇÃO: 
