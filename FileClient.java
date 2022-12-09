@@ -20,7 +20,7 @@ public class FileClient {
     private static Scanner scanner = new Scanner(System.in);
 
     public static void main (String [] args ) throws IOException {
-        System.out.println("Digite o localhost:");
+        System.out.println("Digite o ip do servidor:");
         SERVER = scanner.next();
 
         System.out.println("Digite a porta desejada:");
